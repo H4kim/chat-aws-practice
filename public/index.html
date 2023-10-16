@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Chat Room</title>
+   </head>
+   <body>
+      <h1>People in the room: <span id="peopleCount">0</span></h1>
+      <script>
+         document.addEventListener("DOMContentLoaded", () => {
+            const ws = new WebSocket("ws://localhost:3000");
+            const peopleCount = document.getElementById("peopleCount");
+
+            const updatePeopleCount = count => {
+               peopleCount.textContent = count;
+            };
+
+            ws.onopen = () => {
+               ws.send(JSON.stringify({ requestType: "getConnectedPeopleNum" }));
+            };
+
+            ws.onmessage = event => {
+               const { eventType, eventData } = JSON.parse(event.data);
+
+               if (eventType === "onConnectedPeopleNum") {
+                  updatePeopleCount(eventData.count);
+               }
+            };
+
+            ws.onclose = () => {
+               console.log("WebSocket connection closed.");
+            };
+         });
+      </script>
+   </body>
+</html>
