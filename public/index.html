@@ -9,7 +9,7 @@
       <h1>People in the room: <span id="peopleCount">0</span></h1>
       <script>
          document.addEventListener("DOMContentLoaded", () => {
-            const ws = new WebSocket("ws://localhost:3000");
+            const ws = new WebSocket("ws://127.0.0.1:80");
             const peopleCount = document.getElementById("peopleCount");
 
             const updatePeopleCount = count => {

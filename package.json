@@ -4,7 +4,8 @@
    "description": "",
    "main": "server.ts",
    "scripts": {
-      "start": "nodemon --watch src --ext ts --exec ts-node src/server.ts"
+      "start": "nodemon --watch src --ext ts --exec ts-node src/server.ts",
+      "build": "tsc && cp -r public dist"
    },
    "author": "",
    "license": "ISC",

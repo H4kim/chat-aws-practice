@@ -1,9 +1,13 @@
 FROM node:18
 
-# Rest of your Dockerfile remains the same
 WORKDIR /usr/src/app
 COPY package*.json ./
+RUN npm install -g typescript
+COPY . .
 RUN npm install
-COPY dist/ ./dist/
+RUN npm run build
+
+ENV PORT=80
 EXPOSE 3000
+
 CMD ["node", "dist/server.js"]
