@@ -13,7 +13,7 @@ class WebSocketManager {
 
       this.wss.on("connection", ws => {
          this.clients.add(ws);
-
+         this.broadcastOnConnectedNumChanged();
          ws.on("message", (message: WebSocket.Data) => {
             const { requestType, requestData } = JSON.parse(message as string) as TypeWsRequest;
             this.notifyHandlers({ requestType, requestData }, ws);
@@ -21,6 +21,7 @@ class WebSocketManager {
 
          ws.on("close", () => {
             this.clients.delete(ws);
+            this.broadcastOnConnectedNumChanged();
          });
       });
    }
@@ -32,12 +33,16 @@ class WebSocketManager {
       }
    };
 
+   private broadcastOnConnectedNumChanged = () => {
+      this.broadcastEvent("onConnectedPeopleNumChanged", { count: this.getConnectedPeopleNum() });
+   };
+
    registerRequestHandler = (requestType: string, handler: TypeRequestHandler) => {
       this.requestHandlers.set(requestType, handler);
    };
 
    broadcastEvent = (eventType: string, eventData: any) => {
-      const message = JSON.stringify({ type: eventType, data: eventData });
+      const message = JSON.stringify({ eventType, eventData });
       console.log("broadcastEvent", message);
       this.clients.forEach(client => {
          if (client.readyState === WebSocket.OPEN) {

@@ -6,24 +6,39 @@
       <title>Chat Room</title>
    </head>
    <body>
-      <h1>People in the room: <span id="peopleCount">0</span></h1>
+      <h1>People in the server: <span id="peopleCount">0</span></h1>
+      <h1>Server id: <span id="serverId">Loading..</span></h1>
       <script>
          document.addEventListener("DOMContentLoaded", () => {
-            const ws = new WebSocket("ws://127.0.0.1:80");
+            // Get the current host and port
+            const host = window.location.hostname;
+            const port = window.location.port;
+
+            // Connect to the server
+            const ws = new WebSocket(`ws://${host}:${port}`);
+
             const peopleCount = document.getElementById("peopleCount");
+            const serverId = document.getElementById("serverId");
 
             const updatePeopleCount = count => {
                peopleCount.textContent = count;
             };
+            const updateServerId = id => {
+               serverId.textContent = id;
+            };
 
             ws.onopen = () => {
                ws.send(JSON.stringify({ requestType: "getConnectedPeopleNum" }));
+               ws.send(JSON.stringify({ requestType: "getServerInfos" }));
             };
 
             ws.onmessage = event => {
                const { eventType, eventData } = JSON.parse(event.data);
 
-               if (eventType === "onConnectedPeopleNum") {
+               if (eventType === "onGetServerInfos") {
+                  updateServerId(eventData.id);
+               }
+               if (eventType === "onConnectedPeopleNum" || eventType === "onConnectedPeopleNumChanged") {
                   updatePeopleCount(eventData.count);
                }
             };
