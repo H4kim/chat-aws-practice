@@ -4,8 +4,8 @@ import express from "express";
 import path from "path";
 
 import WebSocketManager from "./websocket/WebsocketManager";
-import chatHandler from "./wsHandlers/chat";
-import serverInfosHandler from "./wsHandlers/serverInfos";
+import chatHandler from "./wsReqHandlers/chat";
+import serverInfosHandler from "./wsReqHandlers/serverInfos";
 
 const app = express();
 const server = http.createServer(app);
