@@ -4,8 +4,8 @@ import express from "express";
 import path from "path";
 
 import WebSocketManager from "./websocket/WebsocketManager";
-import chatHandler from "./wsReqHandlers/chat";
-import serverInfosHandler from "./wsReqHandlers/serverInfos";
+import chatHandler from "./reqHandlers/chat";
+import serverInfosHandler from "./reqHandlers/serverInfos";
 import instancesSyncClient from "./MessageBrokers/rabbitMq/clients/InstancesSyncClient";
 
 const app = express();
