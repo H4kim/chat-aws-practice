@@ -1,11 +1,11 @@
 import IInstancesSyncClient from "../../../interfaces/IInstancesSyncClient";
 import RabbitMQClient from "../RabbitMQClient";
+import os from "os";
 
-const HEADERS = {
-   "x-match": "any",
-   "receiverId": process.argv[2]
-};
+const hostname = os.hostname();
+const pid = process.pid;
 
+const ROOM_MESSAGE_QUEUE_ID = `${hostname}-${pid}`;
 class InstancesSyncClient implements IInstancesSyncClient {
    private client: RabbitMQClient;
    private messageSubscribers: Map<string, ((message: any) => void)[]> = new Map();
@@ -21,10 +21,10 @@ class InstancesSyncClient implements IInstancesSyncClient {
       console.log("connection established to InstancesSync message broker");
       //CREATE EXCHANGES
       // room message exchange
-      this.client.createExchange("room_message_exchange", "headers");
-      this.client.createQueue(`room_messages_queue_${process.argv[2]}`);
-      this.client.bindQueueToExchange(`room_messages_queue_${process.argv[2]}`, "room_message_exchange", "", HEADERS);
-      this.client.consumeMessages(`room_messages_queue_${process.argv[2]}`, message => {
+      this.client.createExchange("room_message_exchange", "fanout");
+      this.client.createQueue(`room_messages_queue_${ROOM_MESSAGE_QUEUE_ID}`);
+      this.client.bindQueueToExchange(`room_messages_queue_${ROOM_MESSAGE_QUEUE_ID}`, "room_message_exchange", "");
+      this.client.consumeMessages(`room_messages_queue_${ROOM_MESSAGE_QUEUE_ID}`, message => {
          this.notifyRoomMessageSubscribers(message);
       });
    };
@@ -34,24 +34,24 @@ class InstancesSyncClient implements IInstancesSyncClient {
    };
 
    sendRoomMessage(message: any): void {
-      const messageHeaders = { "receiverId": process.argv[3] };
-
-      this.client.sendMessage("room_message_exchange", message, "", messageHeaders);
+      this.client.sendMessage("room_message_exchange", message, "", {
+         senderQueue: `room_messages_queue_${ROOM_MESSAGE_QUEUE_ID}`
+      });
    }
 
    registerRoomMessageSubscriber(cb: (message: any) => void): void {
       let subscribers = [];
-      const roomMessageSubscribers = this.messageSubscribers.get(`room_messages_queue_${process.argv[2]}`);
+      const roomMessageSubscribers = this.messageSubscribers.get(`room_messages_queue_${ROOM_MESSAGE_QUEUE_ID}`);
       if (roomMessageSubscribers) {
          subscribers = [...roomMessageSubscribers, cb];
          subscribers.push(cb);
       }
 
-      this.messageSubscribers.set(`room_messages_queue_${process.argv[2]}`, [cb]);
+      this.messageSubscribers.set(`room_messages_queue_${ROOM_MESSAGE_QUEUE_ID}`, [cb]);
    }
 
    private notifyRoomMessageSubscribers(message: string): void {
-      this.messageSubscribers.get(`room_messages_queue_${process.argv[2]}`)?.forEach(subscriber => {
+      this.messageSubscribers.get(`room_messages_queue_${ROOM_MESSAGE_QUEUE_ID}`)?.forEach(subscriber => {
          subscriber(message);
       });
    }

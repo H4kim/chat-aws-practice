@@ -67,6 +67,11 @@ class RabbitMQClient extends EventEmitter {
       await this.channel.consume(queueName, message => {
          if (message) {
             const messageContent = message.content.toString();
+
+            //check if the message is sent from the current process
+            if (message.properties?.headers.senderQueue === queueName) {
+               return this.channel!.ack(message);
+            }
             onMessageCallback(messageContent);
             this.channel!.ack(message);
          }
