@@ -8,45 +8,18 @@
    <body>
       <h1>People in the server: <span id="peopleCount">0</span></h1>
       <h1>Server id: <span id="serverId">Loading..</span></h1>
-      <script>
-         document.addEventListener("DOMContentLoaded", () => {
-            // Get the current host and port
-            const host = window.location.hostname;
-            const port = window.location.port;
+      <div id="joinRoomForm">
+         <input type="text" id="username" placeholder="Enter your username" />
+         <button id="joinButton">Join</button>
+      </div>
+      <div id="chatContainer" style="display: none">
+         <div id="messageContainer">
+            <!-- Messages will be displayed here -->
+         </div>
+         <input type="text" id="messageInput" placeholder="Enter your message" />
+         <button id="sendButton">Send</button>
+      </div>
 
-            // Connect to the server
-            const ws = new WebSocket(`ws://${host}:${port}`);
-
-            const peopleCount = document.getElementById("peopleCount");
-            const serverId = document.getElementById("serverId");
-
-            const updatePeopleCount = count => {
-               peopleCount.textContent = count;
-            };
-            const updateServerId = id => {
-               serverId.textContent = id;
-            };
-
-            ws.onopen = () => {
-               ws.send(JSON.stringify({ requestType: "getConnectedPeopleNum" }));
-               ws.send(JSON.stringify({ requestType: "getServerInfos" }));
-            };
-
-            ws.onmessage = event => {
-               const { eventType, eventData } = JSON.parse(event.data);
-
-               if (eventType === "onGetServerInfos") {
-                  updateServerId(eventData.id);
-               }
-               if (eventType === "onConnectedPeopleNum" || eventType === "onConnectedPeopleNumChanged") {
-                  updatePeopleCount(eventData.count);
-               }
-            };
-
-            ws.onclose = () => {
-               console.log("WebSocket connection closed.");
-            };
-         });
-      </script>
+      <script src="index.js"></script>
    </body>
 </html>

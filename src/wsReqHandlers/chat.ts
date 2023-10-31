@@ -1,27 +1,46 @@
 import WebSocket from "ws";
-import WebSocketManager from "../websocket/WebsocketManager";
 import { TypeWsRequest } from "../websocket/WsTypes";
+import IWebSocketManager from "../interfaces/IWebsocketManager";
+import IInstancesSyncClient from "../interfaces/IInstancesSyncClient";
 
 class chatHandler {
-   private wssManager: WebSocketManager;
-   constructor(wssManager: WebSocketManager) {
+   private wssManager: IWebSocketManager;
+   private instancesSyncClient: IInstancesSyncClient;
+   constructor(wssManager: IWebSocketManager, instancesSyncClient: IInstancesSyncClient) {
       this.wssManager = wssManager;
-      this.wssManager.registerRequestHandler("joinRoom", this.handleJoinRoom);
-      this.wssManager.registerRequestHandler("getConnectedPeopleNum", this.handleConnectedPeopleNum);
+      this.instancesSyncClient = instancesSyncClient;
+      this.wssManager.registerRequestHandler("joinPublicRoom", this.handleJoinPublicRoom);
+      this.wssManager.registerRequestHandler("sendPublicRoomMessage", this.handleSendPublicRoomMessage);
+      this.instancesSyncClient.registerRoomMessageSubscriber(this.handleMessageBrokerRoomMessage);
    }
 
-   private handleJoinRoom = (data: TypeWsRequest, _client: WebSocket) => {
+   private handleSendPublicRoomMessage = (data: TypeWsRequest, _client: WebSocket) => {
       const { requestData } = data;
-      this.wssManager.broadcastEvent("onRoomJoin", {
-         message: `User ${requestData.username} joined room ${requestData.room}`
-      });
+      const { username, message } = requestData;
+      // TODO send message to connected users
+      this.wssManager.broadcastEvent("onNewPublicRoomMessage", { username, message });
+
+      // dispatch event to all instances
+      this.instancesSyncClient.sendRoomMessage({ username, message });
    };
 
-   private handleConnectedPeopleNum = (_data: TypeWsRequest, client: WebSocket) => {
+   private handleJoinPublicRoom = (data: TypeWsRequest, client: WebSocket) => {
+      const { requestData } = data;
+      // send history messages to the user (from a DB)
       this.wssManager.sendEvent(client, {
-         eventType: "onConnectedPeopleNum",
-         eventData: { count: this.wssManager.getConnectedPeopleNum() }
+         eventType: "onJoinPublicRoom",
+         eventData: {
+            messages: []
+         }
       });
+      // TODO dispatch event to all instances
+      // TODO send message to all connected users
+   };
+
+   //Message Broker
+   private handleMessageBrokerRoomMessage = (stringifiedMessage: string): void => {
+      const { username, message } = JSON.parse(stringifiedMessage);
+      this.wssManager.broadcastEvent("onNewPublicRoomMessage", { username, message });
    };
 }
 

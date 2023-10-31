@@ -1,3 +1,5 @@
+import WebSocket from "ws";
+
 type TypeWsRequest = {
    requestType: string;
    requestData?: any;
@@ -7,4 +9,6 @@ type TypeWsEvent = {
    eventData?: any;
 };
 
-export { TypeWsRequest, TypeWsEvent };
+type TypeRequestHandler = (data: TypeWsRequest, ws: WebSocket) => void;
+
+export { TypeWsRequest, TypeWsEvent, TypeRequestHandler };
