@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
    };
 
    const sendPublicRoomMessage = e => {
-      if (e && e.keyCode !== 13) {
+      if (e.type === "keydown" && e.keyCode !== 13) {
          return;
       }
 
@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
       messageInput.value = "";
    };
 
-   joinPublicRoom = e => {
+   const joinPublicRoom = e => {
       if (e && e.keyCode !== 13) {
          return;
       }
@@ -71,6 +71,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Send the join request to the server
       ws.send(JSON.stringify({ requestType: "joinPublicRoom", requestData: { username } }));
+   };
+
+   const appendJoinMessage = message => {
+      const messageElement = document.createElement("div");
+      messageElement.style.marginBottom = "10px";
+      messageElement.style.color = "green";
+      messageElement.style.fontWeight = "bold";
+      messageElement.textContent = message;
+      messageContainer.appendChild(messageElement);
    };
 
    //------------------------------- Events -------------------------------
@@ -100,6 +109,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (eventType === "onNewPublicRoomMessage") {
          appendMessage(eventData.username, eventData.message);
+      }
+      if (eventType === "onUserJoinedPublicRoom") {
+         const joinMessage = `${eventData.username} has joined the room!`;
+         appendJoinMessage(joinMessage); // Add this function
       }
    };
 

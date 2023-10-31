@@ -3,7 +3,8 @@ import RabbitMQClient from "../RabbitMQClient";
 import os from "os";
 
 const hostname = os.hostname();
-const pid = process.pid;
+// const pid =  process.pid; //TODO uncomment for production
+const pid = process.argv[2];
 
 const ROOM_MESSAGE_QUEUE_ID = `${hostname}-${pid}`;
 class InstancesSyncClient implements IInstancesSyncClient {
@@ -34,6 +35,12 @@ class InstancesSyncClient implements IInstancesSyncClient {
    };
 
    sendRoomMessage(message: any): void {
+      this.client.sendMessage("room_message_exchange", message, "", {
+         senderQueue: `room_messages_queue_${ROOM_MESSAGE_QUEUE_ID}`
+      });
+   }
+
+   sendUserJoinedPublicRoom(message: any): void {
       this.client.sendMessage("room_message_exchange", message, "", {
          senderQueue: `room_messages_queue_${ROOM_MESSAGE_QUEUE_ID}`
       });

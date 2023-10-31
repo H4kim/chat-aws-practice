@@ -13,7 +13,7 @@ class serverInfosHandler {
    private handleGetServerInfos = (_data: TypeWsRequest, client: WebSocket) => {
       this.wssManager.sendEvent(client, {
          eventType: "onGetServerInfos",
-         eventData: { id: process.env.SERVER_INSTANCE_ID || "unknown" }
+         eventData: { id: process.env.SERVER_INSTANCE_ID || process.argv[2] || "unknown" }
       });
    };
 
