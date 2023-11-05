@@ -2,35 +2,42 @@ import WebSocket from "ws";
 import { TypeWsRequest } from "../websocket/WsTypes";
 import IWebSocketManager from "../interfaces/IWebsocketManager";
 import IInstancesSyncClient from "../interfaces/IInstancesSyncClient";
+import { IMessageRepository } from "../interfaces/IMessageRepository";
 
 class chatHandler {
    private wssManager: IWebSocketManager;
    private instancesSyncClient: IInstancesSyncClient;
-   constructor(wssManager: IWebSocketManager, instancesSyncClient: IInstancesSyncClient) {
+   private repository: IMessageRepository;
+   constructor(
+      wssManager: IWebSocketManager,
+      instancesSyncClient: IInstancesSyncClient,
+      repository: IMessageRepository
+   ) {
       this.wssManager = wssManager;
       this.instancesSyncClient = instancesSyncClient;
       this.wssManager.registerRequestHandler("joinPublicRoom", this.handleJoinPublicRoom);
       this.wssManager.registerRequestHandler("sendPublicRoomMessage", this.handleSendPublicRoomMessage);
       this.instancesSyncClient.registerRoomMessageSubscriber(this.handleBrokerMessage);
+      this.repository = repository;
    }
 
-   private handleSendPublicRoomMessage = (data: TypeWsRequest, _client: WebSocket) => {
+   private handleSendPublicRoomMessage = async (data: TypeWsRequest, _client: WebSocket) => {
       const { requestData } = data;
       const { username, message } = requestData;
-      // TODO send message to connected users
       this.wssManager.broadcastEvent("onNewPublicRoomMessage", { username, message });
 
-      // dispatch event to all instances
       this.instancesSyncClient.sendRoomMessage({ type: "simple_message", username, message });
+      await this.repository.sendMessage(username, message);
    };
 
-   private handleJoinPublicRoom = (data: TypeWsRequest, client: WebSocket) => {
+   private handleJoinPublicRoom = async (data: TypeWsRequest, client: WebSocket) => {
       const { requestData } = data;
-      // send history messages to the user (from a DB)
+
+      const messages = await this.repository.getMessages();
       this.wssManager.sendEvent(client, {
          eventType: "onJoinPublicRoom",
          eventData: {
-            messages: []
+            messages
          }
       });
 

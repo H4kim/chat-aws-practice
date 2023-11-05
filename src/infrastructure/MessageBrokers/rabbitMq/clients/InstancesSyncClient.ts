@@ -1,10 +1,11 @@
-import IInstancesSyncClient from "../../../interfaces/IInstancesSyncClient";
+import IInstancesSyncClient from "../../../../interfaces/IInstancesSyncClient";
 import RabbitMQClient from "../RabbitMQClient";
 import os from "os";
 
 const hostname = os.hostname();
-// const pid =  process.pid; //TODO uncomment for production
-const pid = process.argv[2];
+
+//dev vs prod
+const pid = process.argv[2] || process.pid;
 
 const ROOM_MESSAGE_QUEUE_ID = `${hostname}-${pid}`;
 class InstancesSyncClient implements IInstancesSyncClient {

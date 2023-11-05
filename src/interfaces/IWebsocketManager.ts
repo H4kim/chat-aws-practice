@@ -1,5 +1,4 @@
 import WebSocket from "ws";
-import http from "http";
 import { TypeRequestHandler, TypeWsEvent } from "../websocket/WsTypes";
 
 interface IWebSocketManager {
