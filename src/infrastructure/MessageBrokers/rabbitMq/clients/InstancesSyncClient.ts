@@ -13,7 +13,7 @@ class InstancesSyncClient implements IInstancesSyncClient {
    private messageSubscribers: Map<string, ((message: any) => void)[]> = new Map();
 
    constructor() {
-      this.client = new RabbitMQClient("amqp://localhost");
+      this.client = new RabbitMQClient(process.env.MESSAGE_BROKER_URL || "");
       this.client.on("error", this.handleClientError);
       this.client.on("connected", this.handleClientConnected);
       this.client.connect();
