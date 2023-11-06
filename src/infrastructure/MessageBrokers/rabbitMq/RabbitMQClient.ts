@@ -4,16 +4,16 @@ import * as amqp from "amqplib";
 class RabbitMQClient extends EventEmitter {
    private connection: amqp.Connection | null = null;
    private channel: amqp.Channel | null = null;
-   private ampqURL: string;
+   private ampqConnectionOptions: amqp.Options.Connect;
 
-   constructor(ampqURL: string) {
+   constructor(ampqConnectionOptions: amqp.Options.Connect) {
       super();
-      this.ampqURL = ampqURL;
+      this.ampqConnectionOptions = ampqConnectionOptions;
    }
 
    async connect(): Promise<void> {
       try {
-         this.connection = await amqp.connect(this.ampqURL);
+         this.connection = await amqp.connect(this.ampqConnectionOptions);
          this.channel = await this.connection.createChannel();
          this.emit("connected");
       } catch (error) {

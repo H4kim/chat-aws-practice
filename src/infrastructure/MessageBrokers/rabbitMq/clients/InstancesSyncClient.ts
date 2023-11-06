@@ -8,12 +8,19 @@ const hostname = os.hostname();
 const pid = process.argv[2] || process.pid;
 
 const ROOM_MESSAGE_QUEUE_ID = `${hostname}-${pid}`;
+
 class InstancesSyncClient implements IInstancesSyncClient {
    private client: RabbitMQClient;
    private messageSubscribers: Map<string, ((message: any) => void)[]> = new Map();
 
    constructor() {
-      this.client = new RabbitMQClient(process.env.MESSAGE_BROKER_URL || "");
+      this.client = new RabbitMQClient({
+         protocol: "amqps",
+         port: 5671,
+         hostname: process.env.MESSAGE_BROKER_URL,
+         username: process.env.MESSAGE_BROKER_USERNAME,
+         password: process.env.MESSAGE_BROKER_PASSWORD
+      });
       this.client.on("error", this.handleClientError);
       this.client.on("connected", this.handleClientConnected);
       this.client.connect();
