@@ -10,20 +10,31 @@ import serverInfosHandler from "./reqHandlers/serverInfos";
 import instancesSyncClient from "./infrastructure/MessageBrokers/rabbitMq/clients/InstancesSyncClient";
 import MessageRepository from "./repositories/MessageRepository";
 import postgresPool from "./infrastructure/database/PostgresPool";
+import loadSecrets from "./infrastructure/utils/loadSecrets";
 
-const app = express();
-const server = http.createServer(app);
-const wssManager = new WebSocketManager(server);
-const port = process.env.PORT || process.argv[2] || 3000;
+if (process.env.AWS_EXECUTION_ENV || process.env.NODE_ENV === "production") {
+   loadSecrets().then(() => {
+      startApp();
+   });
+} else {
+   startApp();
+}
 
-app.use(express.static(path.join(process.cwd(), "public")));
+function startApp() {
+   const app = express();
+   const server = http.createServer(app);
+   const wssManager = new WebSocketManager(server);
+   const port = process.env.PORT || process.argv[2];
 
-const messageRepository = new MessageRepository(postgresPool);
-new chatHandler(wssManager, instancesSyncClient, messageRepository);
-new serverInfosHandler(wssManager);
+   app.use(express.static(path.join(process.cwd(), "public")));
 
-//TODO handler termination signals.
+   const messageRepository = new MessageRepository(postgresPool);
+   new chatHandler(wssManager, instancesSyncClient, messageRepository);
+   new serverInfosHandler(wssManager);
 
-server.listen(port, () => {
-   console.log(`Server is running on port ${port}`);
-});
+   //TODO handler termination signals.
+
+   server.listen(port, () => {
+      console.log(`Server is running on port ${port}`);
+   });
+}
