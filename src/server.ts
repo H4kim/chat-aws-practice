@@ -12,7 +12,7 @@ import MessageRepository from "./repositories/MessageRepository";
 import postgresPool from "./infrastructure/database/PostgresPool";
 import loadSecrets from "./infrastructure/utils/loadSecrets";
 
-if (process.env.AWS_EXECUTION_ENV || process.env.NODE_ENV === "production") {
+if (process.env.AWS_EXECUTION_ENV) {
    loadSecrets().then(() => {
       startApp();
    });
