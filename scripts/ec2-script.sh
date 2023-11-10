@@ -19,4 +19,4 @@ TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metad
 public_ip=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/public-ipv4)
 
 # Run Docker image with environment variable and port mapping
-docker run -d -p 80:3000 -e SERVER_INSTANCE_ID="$public_ip" h4kst3r/chat-app-aws:v1
+docker run -d -p 80:3000 -e SERVER_INSTANCE_ID="$public_ip" -e AWS_EXECUTION_ENV=true h4kst3r/chat-app-aws:v1

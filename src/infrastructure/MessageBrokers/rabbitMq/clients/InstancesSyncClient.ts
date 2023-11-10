@@ -12,8 +12,14 @@ const ROOM_MESSAGE_QUEUE_ID = `${hostname}-${pid}`;
 class InstancesSyncClient implements IInstancesSyncClient {
    private client: RabbitMQClient;
    private messageSubscribers: Map<string, ((message: any) => void)[]> = new Map();
+   private initialized: boolean = false;
 
    constructor() {
+      if (this.initialized) {
+         throw new Error("A single instance is allowed");
+      }
+
+      this.initialized = true;
       this.client = new RabbitMQClient({
          protocol: "amqps",
          port: 5671,
@@ -76,4 +82,4 @@ class InstancesSyncClient implements IInstancesSyncClient {
    }
 }
 
-export default new InstancesSyncClient();
+export default InstancesSyncClient;

@@ -1,32 +1,34 @@
-import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
+import { SSMClient, GetParametersByPathCommand } from "@aws-sdk/client-ssm";
 
-const ENV_VARIABLES = [
-   "DB_USER",
-   "DB_PASSWORD",
-   "DB_HOST",
-   "DB_NAME",
-   "DB_PORT",
-   "DB_SSL_CERT_PATH",
-   "MESSAGE_BROKER_URL",
-   "MESSAGE_BROKER_URL",
-   "MESSAGE_BROKER_USERNAME",
-   "MESSAGE_BROKER_PASSWORD"
-];
+const PARAMETER_PATH = "/chatApp/";
 
 const loadSecrets = async (): Promise<void> => {
    const client = new SSMClient({ region: "us-east-1" });
 
-   const parameterPromises = ENV_VARIABLES.map(async envString => {
-      const input = {
-         Name: envString,
-         WithDecryption: true
-      };
-      const command = new GetParameterCommand(input);
-      const parameterValue = (await client.send(command)).Parameter?.Value;
-      process.env[envString] = parameterValue;
-   });
+   const paramsRequest = {
+      Path: PARAMETER_PATH,
+      Recursive: true,
+      WithDecryption: true
+   };
 
-   await Promise.all(parameterPromises);
+   try {
+      const response = await client.send(new GetParametersByPathCommand(paramsRequest));
+      if (!response.Parameters) {
+         throw new Error("No parameters available on parameters store");
+      }
+
+      response.Parameters.forEach(param => {
+         const paramName = param?.Name?.substring(param.Name.lastIndexOf("/") + 1);
+
+         if (paramName) {
+            process.env[paramName] = param.Value;
+            console.log(`Loaded env variable: ${paramName}`);
+         }
+      });
+   } catch (err: any) {
+      console.log("ERROR while trying to load env variables", err);
+      throw new Error(err);
+   }
 };
 
 export default loadSecrets;
